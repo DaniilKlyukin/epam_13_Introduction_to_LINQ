@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IntroductionToLINQ
 {
-    enum TestResultFieldName
+    public enum TestResultFieldName
     {
         StudentName,
         TestName,
@@ -15,7 +13,7 @@ namespace IntroductionToLINQ
         Mark
     }
 
-    enum SortOrder
+    public enum SortOrder
     {
         Ascending = 1,
         Descending = -1
@@ -27,6 +25,26 @@ namespace IntroductionToLINQ
         {
             string path = @"B:\StudentsTestsResults.dat";
 
+            var userArgs = GetInputArgumentsFromUser();
+
+            var orderType = userArgs.Item1;
+            var rowsCount = userArgs.Item2;
+            var fieldName = userArgs.Item3;
+
+            var data = GetData(path)
+                .OrderBy(fieldName, orderType)
+                .Take(rowsCount == -1 ? int.MaxValue : rowsCount)
+                .Select(d =>
+            {
+                Console.WriteLine($"Имя: {d.StudentName}\t Тест: {d.TestName}\t Дата: {d.TestDate}\t Оценка: {d.Mark}.");
+                return d;
+            }).ToList();
+
+            Console.ReadLine();
+        }
+
+        private static Tuple<SortOrder, int, string> GetInputArgumentsFromUser()
+        {
             Console.WriteLine("Выберите тип упорядочивания (1 - по возрастанию, -1 - по убыванию).");
             int parsedSortOrder;
             var parsed1 = int.TryParse(Console.ReadLine(), out parsedSortOrder);
@@ -47,26 +65,24 @@ namespace IntroductionToLINQ
             Console.WriteLine("Выберите по какому полю сортировать (1 - Имя студента, 2 - Название теста, 3 - Дата проведения теста, 4 - Оценка).");
             int parsedFieldNumber;
             var parsed3 = int.TryParse(Console.ReadLine(), out parsedFieldNumber);
-            var fieldName = TestResultFieldName.StudentName;
+            var fieldName = "StudentName";
 
             if (!parsed3)
                 Console.WriteLine("Неверные входные данные, значение будет выставлено по умолчанию (Имя студента).");
 
             switch (parsedFieldNumber)
             {
-                case 1: fieldName = TestResultFieldName.StudentName; break;
-                case 2: fieldName = TestResultFieldName.TestName; break;
-                case 3: fieldName = TestResultFieldName.TestDate; break;
-                case 4: fieldName = TestResultFieldName.Mark; break;
-                default: fieldName = TestResultFieldName.StudentName; break;
+                case 1: fieldName = "StudentName"; break;
+                case 2: fieldName = "TestName"; break;
+                case 3: fieldName = "TestDate"; break;
+                case 4: fieldName = "Mark"; break;
+                default: fieldName = "StudentName"; break;
             }
 
-            GetData(path, orderType, parsedRowsCount, fieldName);
-
-            Console.ReadLine();
+            return Tuple.Create(orderType, parsedRowsCount, fieldName);
         }
 
-        private static List<StudentTestResult> GetData(string path, SortOrder order, int rowsLimit, TestResultFieldName field)
+        private static List<StudentTestResult> GetData(string path)
         {
             var list = new List<StudentTestResult>();
 
@@ -90,7 +106,7 @@ namespace IntroductionToLINQ
                 Console.WriteLine(e.Message);
             }
 
-            return list.Take(rowsLimit == -1 ? list.Count : rowsLimit).ToList();
+            return list;
         }
 
         private static void AddData(string path)
