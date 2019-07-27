@@ -2,7 +2,7 @@
 
 namespace IntroductionToLINQ
 {
-    class StudentTestResult
+    public class StudentTestResult
     {
         public string StudentName { get; set; }
         public string TestName { get; set; }
