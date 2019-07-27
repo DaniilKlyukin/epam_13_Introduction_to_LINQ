@@ -7,19 +7,73 @@ using System.Threading.Tasks;
 
 namespace IntroductionToLINQ
 {
+    enum TestResultFieldName
+    {
+        StudentName,
+        TestName,
+        TestDate,
+        Mark
+    }
+
+    enum SortOrder
+    {
+        Ascending = 1,
+        Descending = -1
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             string path = @"B:\StudentsTestsResults.dat";
 
+            Console.WriteLine("Выберите тип упорядочивания (1 - по возрастанию, -1 - по убыванию).");
+            int parsedSortOrder;
+            var parsed1 = int.TryParse(Console.ReadLine(), out parsedSortOrder);
+            var orderType = SortOrder.Ascending;
+
+            if (parsed1 && parsedSortOrder == -1)
+                orderType = SortOrder.Descending;
+            else if (parsedSortOrder != 1)
+                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (по возрастанию).");
+
+            Console.WriteLine("Выберите ограничение по количеству строк (-1 - без ограничений).");
+            int parsedRowsCount;
+            var parsed2 = int.TryParse(Console.ReadLine(), out parsedRowsCount);
+
+            if (!parsed2)
+                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (без ограничений).");
+
+            Console.WriteLine("Выберите по какому полю сортировать (1 - Имя студента, 2 - Название теста, 3 - Дата проведения теста, 4 - Оценка).");
+            int parsedFieldNumber;
+            var parsed3 = int.TryParse(Console.ReadLine(), out parsedFieldNumber);
+            var fieldName = TestResultFieldName.StudentName;
+
+            if (!parsed3)
+                Console.WriteLine("Неверные входные данные, значение будет выставлено по умолчанию (Имя студента).");
+
+            switch (parsedFieldNumber)
+            {
+                case 1: fieldName = TestResultFieldName.StudentName; break;
+                case 2: fieldName = TestResultFieldName.TestName; break;
+                case 3: fieldName = TestResultFieldName.TestDate; break;
+                case 4: fieldName = TestResultFieldName.Mark; break;
+                default: fieldName = TestResultFieldName.StudentName; break;
+            }
+
+            GetData(path, orderType, parsedRowsCount, fieldName);
+
+            Console.ReadLine();
+        }
+
+        private static List<StudentTestResult> GetData(string path, SortOrder order, int rowsLimit, TestResultFieldName field)
+        {
+            var list = new List<StudentTestResult>();
+
             try
             {
-                // создаем объект BinaryReader
                 using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
                 {
-                    // пока не достигнут конец файла
-                    // считываем каждое значение из файла
                     while (reader.PeekChar() > -1)
                     {
                         var studentName = reader.ReadString();
@@ -27,8 +81,7 @@ namespace IntroductionToLINQ
                         var testDate = DateTime.FromBinary(reader.ReadInt64());
                         var mark = reader.ReadInt32();
 
-                        Console.WriteLine("Имя: {0} \t тест: {1} \t дата: {2} \t оценка: {3}.",
-                            studentName, testName, testDate, mark);
+                        list.Add(new StudentTestResult(studentName, testName, testDate, mark));
                     }
                 }
             }
@@ -36,10 +89,11 @@ namespace IntroductionToLINQ
             {
                 Console.WriteLine(e.Message);
             }
-            Console.ReadLine();
+
+            return list.Take(rowsLimit == -1 ? list.Count : rowsLimit).ToList();
         }
 
-        private void AddData(string path)
+        private static void AddData(string path)
         {
             StudentTestResult[] results =
 {
