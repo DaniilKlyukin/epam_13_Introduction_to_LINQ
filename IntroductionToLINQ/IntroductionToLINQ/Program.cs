@@ -5,14 +5,6 @@ using System.Linq;
 
 namespace IntroductionToLINQ
 {
-    public enum TestResultFieldName
-    {
-        StudentName,
-        TestName,
-        TestDate,
-        Mark
-    }
-
     public enum SortOrder
     {
         Ascending = 1,
@@ -33,7 +25,7 @@ namespace IntroductionToLINQ
 
             var data = GetData(path)
                 .OrderBy(fieldName, orderType)
-                .Take(rowsCount == -1 ? int.MaxValue : rowsCount)
+                .Take(rowsCount)
                 .Select(d =>
             {
                 Console.WriteLine($"Имя: {d.StudentName}\t Тест: {d.TestName}\t Дата: {d.TestDate}\t Оценка: {d.Mark}.");
@@ -45,41 +37,13 @@ namespace IntroductionToLINQ
 
         private static Tuple<SortOrder, int, string> GetInputArgumentsFromUser()
         {
-            Console.WriteLine("Выберите тип упорядочивания (1 - по возрастанию, -1 - по убыванию).");
-            int parsedSortOrder;
-            var parsed1 = int.TryParse(Console.ReadLine(), out parsedSortOrder);
-            var orderType = SortOrder.Ascending;
+            var orderType = EnterSortOrder();
 
-            if (parsed1 && parsedSortOrder == -1)
-                orderType = SortOrder.Descending;
-            else if (parsedSortOrder != 1)
-                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (по возрастанию).");
+            var rowsLimit = EnterRowsLimit();
 
-            Console.WriteLine("Выберите ограничение по количеству строк (-1 - без ограничений).");
-            int parsedRowsCount;
-            var parsed2 = int.TryParse(Console.ReadLine(), out parsedRowsCount);
+            var fieldName = EnterSortingField();
 
-            if (!parsed2)
-                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (без ограничений).");
-
-            Console.WriteLine("Выберите по какому полю сортировать (1 - Имя студента, 2 - Название теста, 3 - Дата проведения теста, 4 - Оценка).");
-            int parsedFieldNumber;
-            var parsed3 = int.TryParse(Console.ReadLine(), out parsedFieldNumber);
-            var fieldName = "StudentName";
-
-            if (!parsed3)
-                Console.WriteLine("Неверные входные данные, значение будет выставлено по умолчанию (Имя студента).");
-
-            switch (parsedFieldNumber)
-            {
-                case 1: fieldName = "StudentName"; break;
-                case 2: fieldName = "TestName"; break;
-                case 3: fieldName = "TestDate"; break;
-                case 4: fieldName = "Mark"; break;
-                default: fieldName = "StudentName"; break;
-            }
-
-            return Tuple.Create(orderType, parsedRowsCount, fieldName);
+            return Tuple.Create(orderType, rowsLimit, fieldName);
         }
 
         private static List<StudentTestResult> GetData(string path)
@@ -107,6 +71,67 @@ namespace IntroductionToLINQ
             }
 
             return list;
+        }
+
+        private static SortOrder EnterSortOrder()
+        {
+            Console.WriteLine("Выберите тип упорядочивания (1 - по возрастанию, -1 - по убыванию).");
+            int parsedSortOrder;
+            var parsed1 = int.TryParse(Console.ReadLine(), out parsedSortOrder);
+
+            if (!parsed1 || Math.Abs(parsedSortOrder) != 1)
+            {
+                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (по возрастанию).");
+                return SortOrder.Ascending;
+            }
+            else
+                return parsedSortOrder == 1 ? SortOrder.Ascending : SortOrder.Descending;
+        }
+
+        private static int EnterRowsLimit()
+        {
+            Console.WriteLine("Выберите ограничение по количеству строк (-1 - без ограничений).");
+            int parsedRowsCount;
+            var parsed2 = int.TryParse(Console.ReadLine(), out parsedRowsCount);
+
+            if (!parsed2)
+            {
+                Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (без ограничений).");
+                return int.MaxValue;
+            }
+            else
+                return parsedRowsCount;
+        }
+
+        private static string EnterSortingField()
+        {
+            Console.WriteLine("Выберите по какому полю сортировать (1 - Имя студента, 2 - Название теста, 3 - Дата проведения теста, 4 - Оценка).");
+            int parsedFieldNumber;
+            var parsed3 = int.TryParse(Console.ReadLine(), out parsedFieldNumber);
+
+            if (!parsed3)
+            {
+                Console.WriteLine("Неверные входные данные, значение будет выставлено по умолчанию (Имя студента).");
+                return "StudentName";
+            }
+            else
+                return GetFieldNameOnIndex(parsedFieldNumber);
+        }
+
+        private static string GetFieldNameOnIndex(int index)
+        {
+            switch (index)
+            {
+                case 1: return "StudentName";
+                case 2: return "TestName";
+                case 3: return "TestDate";
+                case 4: return "Mark";
+                default:
+                    {
+                        Console.WriteLine("Неверные входные данные, значение будет выставлено по умолчанию(Имя студента).");
+                        return "StudentName";
+                    }
+            }
         }
 
         private static void AddData(string path)
