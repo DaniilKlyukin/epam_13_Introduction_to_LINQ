@@ -15,24 +15,41 @@ namespace IntroductionToLINQ
     {
         static void Main(string[] args)
         {
-            string path = @"B:\StudentsTestsResults.dat";
+            var debugDir = Directory.GetCurrentDirectory();
+            var folders = debugDir.Split('\\');
+            var filesDir = string.Join("\\", folders.Take(folders.Length - 3));
 
+            string path = $"{filesDir}\\StudentsTestsResults.dat";
+
+            do
+            {
+                ShowDialog(path);
+                Console.WriteLine("Для выхода введите F, для очистки консоли и продолжения C, чтобы просто продолжить нажмите Enter.");
+                var anwser = Console.ReadKey();
+                if (anwser.Key == ConsoleKey.F)
+                    return;
+                else if (anwser.Key == ConsoleKey.C)
+                    Console.Clear();
+
+            } while (true);
+        }
+
+        private static void ShowDialog(string filePath)
+        {
             var userArgs = GetInputArgumentsFromUser();
 
             var orderType = userArgs.Item1;
             var rowsCount = userArgs.Item2;
             var fieldName = userArgs.Item3;
 
-            var data = GetData(path)
+            var data = GetData(filePath)
                 .OrderBy(fieldName, orderType)
                 .Take(rowsCount)
                 .Select(d =>
-            {
-                Console.WriteLine($"Имя: {d.StudentName}\t Тест: {d.TestName}\t Дата: {d.TestDate}\t Оценка: {d.Mark}.");
-                return d;
-            }).ToList();
-
-            Console.ReadLine();
+                {
+                    Console.WriteLine($"Имя: {d.StudentName}\t Тест: {d.TestName}\t Дата: {d.TestDate}\t Оценка: {d.Mark}.");
+                    return d;
+                }).ToList();
         }
 
         private static Tuple<SortOrder, int, string> GetInputArgumentsFromUser()
@@ -94,13 +111,15 @@ namespace IntroductionToLINQ
             int parsedRowsCount;
             var parsed2 = int.TryParse(Console.ReadLine(), out parsedRowsCount);
 
-            if (!parsed2)
+            if (!parsed2 || parsedRowsCount < -1)
             {
                 Console.WriteLine("Неверные входные данные, значение выставлено по умолчанию (без ограничений).");
                 return int.MaxValue;
             }
             else
-                return parsedRowsCount;
+            {
+                return parsedRowsCount == -1 ? int.MaxValue : parsedRowsCount;
+            }
         }
 
         private static string EnterSortingField()
